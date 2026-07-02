@@ -122,13 +122,14 @@ async def list_downloads():
     # Merge active status/metrics from QueueManager in-memory tasks
     active_tasks = {}
     for task_id, task in queue_mgr.tasks.items():
+        metrics = queue_mgr.active_metrics.get(task_id, {})
         active_tasks[task_id] = {
             "status": task.status,
-            "progress": task.progress,
-            "downloaded_bytes": task.downloaded_bytes,
-            "total_bytes": task.total_bytes,
-            "speed": task.speed,
-            "eta": task.eta,
+            "progress": metrics.get("progress", 0.0),
+            "downloaded_bytes": metrics.get("downloaded_bytes", task.downloaded_bytes),
+            "total_bytes": metrics.get("total_bytes", task.total_bytes),
+            "speed": metrics.get("speed", 0.0),
+            "eta": metrics.get("eta", 0.0),
             "error_message": task.error_message
         }
 

@@ -31,6 +31,7 @@ class QueueManager:
         
         # Callback to notify the GUI/CLI of updates
         self.on_progress_update: Optional[Callable[[int, Dict[str, Any]], None]] = None
+        self.active_metrics: Dict[int, Dict[str, Any]] = {}
 
     def start(self) -> None:
         """Starts the background queue scheduling loop."""
@@ -184,6 +185,7 @@ class QueueManager:
 
     def _task_progress_callback(self, download_id: int, metrics: Dict[str, Any]) -> None:
         """Receives progress updates from active DownloadTasks and propagates them."""
+        self.active_metrics[download_id] = metrics
         # 1. Update database periodically
         # Note: In a production environment, you might throttle progress DB updates to avoid high lock overhead.
         # We can update DB asynchronously without blocking
@@ -227,6 +229,7 @@ class QueueManager:
 
             for download_id in finished_ids:
                 self.active_futures.pop(download_id, None)
+                self.active_metrics.pop(download_id, None)
 
             # 2. Count active downloading tasks
             active_count = len(self.active_futures)
