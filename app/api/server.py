@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -178,6 +178,10 @@ async def update_settings(settings: Dict[str, Any]):
         return {"status": "success", "settings": settings_mgr.settings.model_dump()}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
 
 # Mount static files from React build folder
 dist_path = Path(__file__).parent.parent.parent / "web" / "dist"
