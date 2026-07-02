@@ -390,7 +390,6 @@ function App() {
             {/* Downloads Progress List */}
             {downloads.length > 0 && (
               <div style={{ marginTop: '2rem' }}>
-                <div className="demo-label" style={{ marginBottom: '1rem' }}>Active Download Manager</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   {downloads.map(task => (
                     <div
