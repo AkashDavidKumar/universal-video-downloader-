@@ -49,6 +49,17 @@ def gui():
     logger.info("Starting application in GUI mode...")
     run_gui(settings_mgr)
 
+@cli_app.command()
+def web(
+    host: str = typer.Option("127.0.0.1", help="The host to bind to"),
+    port: int = typer.Option(8000, help="The port to bind to")
+):
+    """Launch the web application (FastAPI + React)."""
+    import uvicorn
+    setup_logger("INFO")
+    logger.info(f"Starting web server at http://{host}:{port}")
+    uvicorn.run("app.api.server:app", host=host, port=port, log_level="info")
+
 def safe_echo(text: str, fg=None, bold=False, err=False):
     encoding = sys.stdout.encoding or 'utf-8'
     safe_text = text.encode(encoding, errors='replace').decode(encoding)

@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './styles.css';
 
 /* =============================================
-   Tiny utility hooks & helpers
+   Toast Notification Hook
    ============================================= */
 
 function useToast() {
@@ -22,7 +22,7 @@ function copyToClipboard(text, show) {
 }
 
 /* =============================================
-   Mock demo: simulates analyze + download
+   Demo Data Fallback
    ============================================= */
 
 const DEMO_VIDEOS = [
@@ -30,220 +30,343 @@ const DEMO_VIDEOS = [
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     title: 'Rick Astley — Never Gonna Give You Up (Official Music Video)',
     uploader: 'Rick Astley',
-    duration: '3m 33s',
-    thumb: '🎵',
+    duration: 213.0,
+    thumbnail: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300',
+    description: 'The official video for Never Gonna Give You Up by Rick Astley.',
     formats: [
-      { id: 'yt_137', label: '1072×1920 (mp4) — 31.7 MB' },
-      { id: 'yt_136', label: '714×1280 (mp4) — 11.7 MB' },
-      { id: 'yt_18',  label: '358×640 (mp4)  — 6.6 MB'  },
-      { id: 'yt_140', label: 'Audio only (m4a) — 1.4 MB' },
+      { format_id: 'yt_137', resolution: '1080p', ext: 'mp4', filesize: 33230000 },
+      { format_id: 'yt_136', resolution: '720p', ext: 'mp4', filesize: 12260000 },
+      { format_id: 'yt_18',  resolution: '360p', ext: 'mp4', filesize: 6910000 },
+      { format_id: 'yt_140', resolution: 'audio', ext: 'm4a', filesize: 1510000 },
     ],
   },
   {
     url: 'https://vimeo.com/76979871',
     title: 'The Mountain — Time Lapse by Terje Sorgjerd',
     uploader: 'Terje Sorgjerd',
-    duration: '4m 42s',
-    thumb: '🏔',
+    duration: 282.0,
+    thumbnail: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=300',
+    description: 'Time lapse shot on El Teide, Spain.',
     formats: [
-      { id: 'vm_1080', label: '1920×1080 (mp4) — 48.2 MB' },
-      { id: 'vm_720',  label: '1280×720  (mp4) — 22.0 MB' },
-      { id: 'vm_360',  label: '640×360   (mp4) — 8.1 MB'  },
+      { format_id: 'vm_1080', resolution: '1080p', ext: 'mp4', filesize: 50540000 },
+      { format_id: 'vm_720',  resolution: '720p', ext: 'mp4', filesize: 23070000 },
+      { format_id: 'vm_360',  resolution: '360p', ext: 'mp4', filesize: 8490000 },
     ],
   },
 ];
 
-function matchDemo(url) {
-  return DEMO_VIDEOS.find(v => url.trim().startsWith(v.url.slice(0, 30)));
-}
-
 /* =============================================
-   Navbar
+   App Component
    ============================================= */
 
-function Navbar() {
-  return (
-    <nav className="navbar">
-      <div className="container navbar-inner">
-        <a href="#" className="nav-logo">
-          <span className="nav-logo-icon">⬇</span>
-          <span>VidDown</span>
-        </a>
-        <ul className="nav-links">
-          <li><a href="#demo"     className="nav-link">Demo</a></li>
-          <li><a href="#features" className="nav-link">Features</a></li>
-          <li><a href="#install"  className="nav-link">Install</a></li>
-          <li>
-            <a
-              href="https://github.com/AkashDavidKumar/universal-video-downloader-"
-              className="nav-link"
-              target="_blank" rel="noreferrer"
-            >
-              GitHub <span className="nav-badge">Open Source</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </nav>
-  );
-}
-
-/* =============================================
-   Hero
-   ============================================= */
-
-function Hero({ onTryDemo }) {
-  return (
-    <section className="hero section container">
-      <div className="hero-eyebrow">
-        <span>⚡</span> Powered by yt-dlp + Python
-      </div>
-      <h1 className="hero-title">Download Any Video,<br />From Anywhere.</h1>
-      <p className="hero-subtitle">
-        A powerful open-source video downloader with a desktop GUI, a full CLI,
-        and a plugin-based extractor engine. Supports YouTube, Vimeo, and hundreds of sites.
-      </p>
-      <div className="hero-actions">
-        <button className="btn btn-primary" onClick={onTryDemo}>
-          ▶ Try the Demo
-        </button>
-        <a
-          href="https://github.com/AkashDavidKumar/universal-video-downloader-"
-          className="btn btn-secondary"
-          target="_blank" rel="noreferrer"
-        >
-          ⭐ Star on GitHub
-        </a>
-        <a href="#install" className="btn btn-ghost">
-          ⬇ Install Guide
-        </a>
-      </div>
-      <div className="hero-stats">
-        {[
-          { value: '1 000+', label: 'Supported Sites' },
-          { value: 'yt-dlp', label: 'Backend Engine'  },
-          { value: 'MIT',    label: 'Open Source'      },
-        ].map(s => (
-          <div key={s.label} className="hero-stat">
-            <div className="hero-stat-value">{s.value}</div>
-            <div className="hero-stat-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* =============================================
-   Downloader Demo Panel
-   ============================================= */
-
-function DownloaderDemo({ autoFocus }) {
-  const [url, setUrl]           = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [result, setResult]     = useState(null);
-  const [selectedFmt, setFmt]   = useState('');
-  const [progress, setProgress] = useState(null); // null | { pct, speed }
-  const [toast, showToast]      = useToast();
+function App() {
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [selectedFmt, setFmt] = useState('');
+  const [downloads, setDownloads] = useState([]);
+  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [toast, showToast] = useToast();
   const inputRef = useRef(null);
 
+  // Auto-detect if API backend is available
   useEffect(() => {
-    if (autoFocus && inputRef.current) inputRef.current.focus();
-  }, [autoFocus]);
+    async function checkBackend() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          setIsDemoMode(false);
+          showToast('Connected to Python backend!', 'success');
+        }
+      } catch (err) {
+        setIsDemoMode(true);
+      }
+    }
+    checkBackend();
+  }, []);
+
+  // Poll for downloads list
+  useEffect(() => {
+    let intervalId;
+    async function fetchDownloads() {
+      if (isDemoMode) return;
+      try {
+        const res = await fetch('/api/downloads');
+        if (res.ok) {
+          const data = await res.json();
+          setDownloads(data);
+        }
+      } catch (err) {
+        console.error('Error fetching downloads:', err);
+      }
+    }
+
+    fetchDownloads();
+    intervalId = setInterval(fetchDownloads, 1000);
+    return () => clearInterval(intervalId);
+  }, [isDemoMode]);
 
   async function handleAnalyze() {
-    if (!url.trim()) { showToast('Please enter a URL first.', 'error'); return; }
+    if (!url.trim()) {
+      showToast('Please enter a URL first.', 'error');
+      return;
+    }
     setLoading(true);
     setResult(null);
-    setProgress(null);
 
-    // Simulate network delay
-    await new Promise(r => setTimeout(r, 1400 + Math.random() * 600));
-
-    const found = matchDemo(url);
-    if (found) {
-      setResult(found);
-      setFmt(found.formats[0].id);
-      showToast('Analysis complete!', 'success');
-    } else {
-      showToast(
-        'Note: This is a demo — paste a YouTube or Vimeo URL for a simulated result. ' +
-        'Run the real app locally to download anything.',
-        'error',
-      );
+    if (isDemoMode) {
+      // Simulated delay
+      await new Promise(r => setTimeout(r, 1200));
+      const found = DEMO_VIDEOS.find(v => url.trim().startsWith(v.url.slice(0, 30)));
+      if (found) {
+        setResult(found);
+        setFmt(found.formats[0].format_id);
+        showToast('Analysis complete (Demo)!', 'success');
+      } else {
+        showToast(
+          'Simulated check: Please paste Rick Astley\'s link or Vimeo 76979871 to trigger demo metadata.',
+          'error'
+        );
+      }
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // Real API Call
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setResult(data);
+        if (data.formats && data.formats.length > 0) {
+          setFmt(data.formats[0].format_id);
+        }
+        showToast('Media page analyzed successfully!', 'success');
+      } else {
+        const err = await res.json();
+        showToast(`Analysis failed: ${err.detail || 'Unknown error'}`, 'error');
+      }
+    } catch (err) {
+      showToast('Backend connection lost.', 'error');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDownload() {
     if (!result || !selectedFmt) return;
-    setProgress({ pct: 0, speed: '0 KB/s' });
 
-    // Simulate download progress
-    let pct = 0;
-    const tick = setInterval(() => {
-      pct = Math.min(pct + Math.floor(Math.random() * 12 + 4), 100);
-      const speed = (Math.random() * 2 + 0.5).toFixed(2) + ' MB/s';
-      setProgress({ pct, speed });
-      if (pct >= 100) {
-        clearInterval(tick);
-        showToast('✅ Download simulated! Run the app locally to actually save files.', 'success');
-        setTimeout(() => setProgress(null), 2000);
+    if (isDemoMode) {
+      showToast('Simulating download queue...', 'success');
+      // Create local demo task
+      const demoId = Date.now();
+      const formatObj = result.formats.find(f => f.format_id === selectedFmt);
+      const totalSize = formatObj?.filesize || 1024 * 1024 * 20;
+
+      const newDemoTask = {
+        id: demoId,
+        title: result.title,
+        status: 'downloading',
+        progress: 0,
+        downloaded_bytes: 0,
+        total_bytes: totalSize,
+        speed: 0,
+        eta: 0,
+        resolution: formatObj?.resolution || 'unknown',
+        container: formatObj?.ext || 'mp4',
+      };
+
+      setDownloads(prev => [newDemoTask, ...prev]);
+
+      // Progress Simulation
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct = Math.min(pct + Math.floor(Math.random() * 10) + 5, 100);
+        const speedBytes = Math.floor(Math.random() * 1024 * 1024 * 3) + 1024 * 512; // 0.5 - 3.5 MB/s
+        setDownloads(prev =>
+          prev.map(t => {
+            if (t.id === demoId) {
+              const status = pct >= 100 ? 'completed' : 'downloading';
+              return {
+                ...t,
+                progress: pct,
+                status,
+                downloaded_bytes: Math.floor((pct / 100) * totalSize),
+                speed: status === 'completed' ? 0 : speedBytes,
+                eta: status === 'completed' ? 0 : Math.ceil(((100 - pct) / 100) * (totalSize / speedBytes)),
+              };
+            }
+            return t;
+          })
+        );
+        if (pct >= 100) {
+          clearInterval(interval);
+        }
+      }, 400);
+      return;
+    }
+
+    // Real API Call
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: result.url, format_id: selectedFmt }),
+      });
+      if (res.ok) {
+        showToast('Download queued successfully!', 'success');
+      } else {
+        const err = await res.json();
+        showToast(`Failed to download: ${err.detail || 'Unknown error'}`, 'error');
       }
-    }, 200);
+    } catch (err) {
+      showToast('Could not reach backend server.', 'error');
+    }
+  }
+
+  async function handleAction(downloadId, action) {
+    if (isDemoMode) {
+      setDownloads(prev =>
+        prev.map(t => {
+          if (t.id === downloadId) {
+            if (action === 'pause') return { ...t, status: 'paused', speed: 0 };
+            if (action === 'resume') return { ...t, status: 'downloading' };
+            if (action === 'cancel') return { ...t, status: 'cancelled', speed: 0 };
+          }
+          return t;
+        })
+      );
+      showToast(`Download ${action}d (Simulated)`, 'success');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/downloads/${downloadId}/${action}`, { method: 'POST' });
+      if (res.ok) {
+        showToast(`Download ${action}d successfully.`, 'success');
+      } else {
+        showToast(`Failed to ${action} download.`, 'error');
+      }
+    } catch (err) {
+      showToast('Error communicating with backend.', 'error');
+    }
   }
 
   function handlePaste() {
     navigator.clipboard.readText().then(t => setUrl(t)).catch(() => {});
   }
 
-  const fmt = result?.formats.find(f => f.id === selectedFmt);
+  const handleTryDemo = () => {
+    setUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+    if (inputRef.current) inputRef.current.focus();
+  };
+
+  // Helper format sizing
+  const formatBytes = bytes => {
+    if (!bytes || bytes <= 0) return 'unknown size';
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  };
+
+  const formatSpeed = speed => {
+    if (!speed || speed <= 0) return '0 KB/s';
+    const mb = speed / (1024 * 1024);
+    return mb >= 0.1 ? `${mb.toFixed(2)} MB/s` : `${(speed / 1024).toFixed(1)} KB/s`;
+  };
 
   return (
-    <section id="demo" className="demo-section">
-      <div className="container">
-        <div className="section-heading">
-          <h2>Live Demo</h2>
-          <p>Paste a YouTube or Vimeo URL below to see the extractor in action.</p>
+    <>
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="container navbar-inner">
+          <a href="#" className="nav-logo">
+            <span className="nav-logo-icon">⬇</span>
+            <span>VidDown Pro</span>
+          </a>
+          <ul className="nav-links">
+            <li><a href="#demo" className="nav-link">Downloader</a></li>
+            <li><a href="#features" className="nav-link">Features</a></li>
+            <li><a href="#install" className="nav-link">Setup</a></li>
+            <li>
+              <span className={`nav-badge ${isDemoMode ? 'demo-badge' : 'connected-badge'}`}>
+                {isDemoMode ? 'Demo Mode' : 'Connected'}
+              </span>
+            </li>
+          </ul>
         </div>
+      </nav>
 
-        <div className="demo-card">
-          <div className="demo-label">Video URL</div>
-          <div className="demo-url-row">
-            <input
-              ref={inputRef}
-              className="demo-input"
-              type="url"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
-            />
-            <button className="btn btn-secondary btn-sm" onClick={handlePaste}>📋 Paste</button>
-            <button
-              className={`btn btn-primary btn-sm btn-analyze${loading ? ' loading' : ''}`}
-              onClick={handleAnalyze}
-              disabled={loading}
-            >
-              {loading ? <span className="btn-spinner" /> : '🔍'}
-              {loading ? 'Analyzing…' : 'Analyze'}
-            </button>
+      {/* Hero */}
+      <section className="hero section container">
+        <div className="hero-eyebrow">
+          <span>⚡</span> FastAPI + React Full-Stack App
+        </div>
+        <h1 className="hero-title">High Speed Downloader<br />Right in Your Browser.</h1>
+        <p className="hero-subtitle">
+          Enjoy the high-fidelity web client that routes download requests directly to Python's concurrent engine, providing fully transparent speed indicators, ETA estimations, and stream resolution selections.
+        </p>
+        <div className="hero-actions">
+          <button className="btn btn-primary" onClick={handleTryDemo}>
+            ▶ Open Downloader
+          </button>
+          <a href="#install" className="btn btn-secondary">
+            📚 Quick Start Guide
+          </a>
+        </div>
+      </section>
+
+      {/* Main Downloader Workspace */}
+      <section id="demo" className="demo-section">
+        <div className="container">
+          <div className="section-heading">
+            <h2>Media Control Hub</h2>
+            <p>Paste your link to fetch video codecs, resolutions, and initiate direct network streaming.</p>
           </div>
 
-          {/* Result area */}
-          <div className={`demo-result${result ? '' : ' hidden'}`}>
+          <div className="demo-card" style={{ maxWidth: '850px' }}>
+            <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem' }}>
+              <input
+                ref={inputRef}
+                className="demo-input"
+                type="url"
+                placeholder="Paste video page URL here (e.g., https://youtube.com/watch?v=...)"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
+              />
+              <button className="btn btn-secondary btn-sm" onClick={handlePaste}>📋 Paste</button>
+              <button
+                className={`btn btn-primary btn-sm btn-analyze ${loading ? 'loading' : ''}`}
+                onClick={handleAnalyze}
+                disabled={loading}
+              >
+                {loading ? <span className="btn-spinner" /> : '🔍'}
+                {loading ? 'Analyzing…' : 'Analyze'}
+              </button>
+            </div>
+
+            {/* Analysis Meta Output */}
             {result && (
-              <>
+              <div className="demo-result" style={{ marginBottom: '1.5rem' }}>
                 <div className="result-meta">
-                  <div className="result-thumb">{result.thumb}</div>
+                  <div className="result-thumb">
+                    {result.thumbnail ? (
+                      <img src={result.thumbnail} alt={result.title} />
+                    ) : (
+                      '🎬'
+                    )}
+                  </div>
                   <div className="result-info">
-                    <div className="result-title">{result.title}</div>
-                    <div className="result-uploader">👤 {result.uploader}</div>
-                    <div className="result-duration">⏱ {result.duration}</div>
+                    <div className="result-title" title={result.title}>{result.title}</div>
+                    <div className="result-uploader">👤 {result.uploader || 'Unknown'}</div>
+                    <div className="result-duration">⏱ {result.duration ? `${Math.floor(result.duration / 60)}m ${Math.floor(result.duration % 60)}s` : 'Unknown'}</div>
                   </div>
                 </div>
-
-                <hr className="divider" />
 
                 <div className="format-row">
                   <select
@@ -251,215 +374,183 @@ function DownloaderDemo({ autoFocus }) {
                     value={selectedFmt}
                     onChange={e => setFmt(e.target.value)}
                   >
-                    {result.formats.map(f => (
-                      <option key={f.id} value={f.id}>{f.label}</option>
+                    {result.formats?.map(f => (
+                      <option key={f.format_id} value={f.format_id}>
+                        {f.resolution} ({f.ext}) — {formatBytes(f.filesize)}
+                      </option>
                     ))}
                   </select>
                   <button className="btn btn-primary btn-sm" onClick={handleDownload}>
                     ⬇ Download
                   </button>
                 </div>
+              </div>
+            )}
 
-                {progress && (
-                  <div className={`progress-wrap${progress !== null ? ' visible' : ''}`}>
-                    <div className="progress-label">
-                      <span>{fmt?.label}</span>
-                      <span>{progress.pct}% · {progress.speed}</span>
+            {/* Downloads Progress List */}
+            {downloads.length > 0 && (
+              <div style={{ marginTop: '2rem' }}>
+                <div className="demo-label" style={{ marginBottom: '1rem' }}>Active Download Manager</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {downloads.map(task => (
+                    <div
+                      key={task.id}
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.6rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div
+                          style={{
+                            fontWeight: '600',
+                            fontSize: '0.9rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '65%',
+                          }}
+                          title={task.title}
+                        >
+                          {task.title}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.78rem',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '999px',
+                            background:
+                              task.status === 'completed'
+                                ? 'rgba(34,197,94,0.15)'
+                                : task.status === 'failed'
+                                ? 'rgba(239,68,68,0.15)'
+                                : 'rgba(56,189,248,0.15)',
+                            color:
+                              task.status === 'completed'
+                                ? 'var(--green)'
+                                : task.status === 'failed'
+                                ? 'var(--red)'
+                                : 'var(--accent)',
+                          }}
+                        >
+                          {task.status.toUpperCase()}
+                        </div>
+                      </div>
+
+                      {/* Info and controls */}
+                      <div className="progress-bar-bg">
+                        <div
+                          className="progress-bar-fill"
+                          style={{ width: `${task.progress || 0}%` }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontSize: '0.78rem',
+                          color: 'var(--text-muted)',
+                        }}
+                      >
+                        <div>
+                          {formatBytes(task.downloaded_bytes)} / {formatBytes(task.total_bytes)}
+                          {task.status === 'downloading' && (
+                            <>
+                              {' · '}
+                              <span style={{ color: 'var(--accent)' }}>{formatSpeed(task.speed)}</span>
+                              {' · '}
+                              <span>ETA: {task.eta ? `${task.eta}s` : '--'}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Controls */}
+                        {task.status !== 'completed' && task.status !== 'failed' && task.status !== 'cancelled' && (
+                          <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            {task.status === 'downloading' ? (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '0.15rem 0.5rem', borderRadius: '4px' }}
+                                onClick={() => handleAction(task.id, 'pause')}
+                              >
+                                ⏸ Pause
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '0.15rem 0.5rem', borderRadius: '4px' }}
+                                onClick={() => handleAction(task.id, 'resume')}
+                              >
+                                ▶ Resume
+                              </button>
+                            )}
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '4px',
+                                borderColor: 'rgba(239,68,68,0.3)',
+                                color: 'var(--red)',
+                              }}
+                              onClick={() => handleAction(task.id, 'cancel')}
+                            >
+                              🛑 Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: `${progress.pct}%` }} />
-                    </div>
-                  </div>
-                )}
-              </>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Toast */}
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>{toast.msg}</div>
-      )}
-    </section>
-  );
-}
-
-/* =============================================
-   Features
-   ============================================= */
-
-const FEATURES = [
-  { icon: '🔌', title: 'Plugin Extractor System',    desc: 'Drop-in extractor plugins for any site. Ships with YouTube (yt-dlp), Vimeo, and a generic HTTP fallback.' },
-  { icon: '🖥',  title: 'Desktop GUI (PySide6)',      desc: 'Native cross-platform desktop app with dark/light themes, progress cards, and format selection.' },
-  { icon: '⌨',  title: 'Full CLI Interface',          desc: 'Analyze URLs, list formats, and download with a single command. Perfect for scripts and automation.' },
-  { icon: '⚡',  title: 'Async Download Queue',       desc: 'Concurrent downloads powered by asyncio. Pause, resume, and cancel any task independently.' },
-  { icon: '🗄',  title: 'SQLite State Persistence',   desc: 'All downloads and recent URLs are tracked in a local SQLite DB — no cloud dependency.' },
-  { icon: '🔒',  title: 'Path Traversal Protection',  desc: 'Strict filename sanitisation and safe destination-path resolution prevent directory traversal attacks.' },
-  { icon: '🎨',  title: 'Dark / Light Themes',        desc: 'Switchable themes with clean QSS stylesheets and consistent design tokens.' },
-  { icon: '📦',  title: 'Standalone Executable',      desc: 'Bundle with PyInstaller into a single-file .exe or binary — no Python install required for end users.' },
-];
-
-function Features() {
-  return (
-    <section id="features" className="section">
-      <div className="container">
+      {/* Installation and run instructions */}
+      <section id="install" className="section container">
         <div className="section-heading">
-          <h2>Everything You Need</h2>
-          <p>A complete, production-ready downloader with a clean architecture.</p>
+          <h2>Run the Server Locally</h2>
+          <p>Launch the Python FastAPI server in one command and load the dashboard.</p>
         </div>
-        <div className="features-grid">
-          {FEATURES.map((f, i) => (
-            <div key={f.title} className="feature-card" style={{ animationDelay: `${i * 0.06}s` }}>
-              <span className="feature-icon">{f.icon}</span>
-              <div className="feature-title">{f.title}</div>
-              <div className="feature-desc">{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* =============================================
-   Supported Sites
-   ============================================= */
-
-const SITES = [
-  { icon: '▶', name: 'YouTube'   },
-  { icon: '🎬', name: 'Vimeo'    },
-  { icon: '📸', name: 'Instagram' },
-  { icon: '🐦', name: 'Twitter'  },
-  { icon: '🎵', name: 'TikTok'   },
-  { icon: '📘', name: 'Facebook' },
-  { icon: '🔴', name: 'Twitch'   },
-  { icon: '💃', name: 'Dailymotion' },
-  { icon: '➕', name: '1000+ more' },
-];
-
-function SupportedSites() {
-  return (
-    <section className="section">
-      <div className="container">
-        <div className="section-heading">
-          <h2>Works With All Major Platforms</h2>
-          <p>Powered by yt-dlp, which supports over 1 000 websites out of the box.</p>
-        </div>
-        <div className="sites-row">
-          {SITES.map(s => (
-            <div key={s.name} className="site-pill">
-              <span>{s.icon}</span> {s.name}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* =============================================
-   Install Guide
-   ============================================= */
-
-const STEPS = [
-  { n: 1, title: 'Clone the Repo',      desc: 'git clone the repository to your machine.' },
-  { n: 2, title: 'Create a venv',       desc: 'python -m venv .venv && activate it.' },
-  { n: 3, title: 'Install deps',        desc: 'pip install -r requirements.txt' },
-  { n: 4, title: 'Run',                 desc: 'python main.py for GUI, or use CLI commands.' },
-];
-
-const CLI_SNIPPET = `# Analyze a video page
-python main.py analyze https://youtube.com/watch?v=...
-
-# Download best format
-python main.py download https://youtube.com/watch?v=...
-
-# Download specific format
-python main.py download https://youtube.com/watch?v=... --format yt_137`;
-
-function InstallGuide({ showToast }) {
-  return (
-    <section id="install" className="section">
-      <div className="container">
-        <div className="section-heading">
-          <h2>Get Started in Minutes</h2>
-          <p>Works on Windows, macOS, and Linux.</p>
-        </div>
-        <div className="steps-grid">
-          {STEPS.map(s => (
-            <div key={s.n} className="step-card">
-              <div className="step-num">{s.n}</div>
-              <div className="step-title">{s.title}</div>
-              <div className="step-desc">{s.desc}</div>
-            </div>
-          ))}
-        </div>
-
-        <br />
-
         <div className="code-block" style={{ position: 'relative' }}>
           <button
             className="copy-btn"
-            onClick={() => copyToClipboard(CLI_SNIPPET, showToast)}
+            onClick={() => copyToClipboard('python main.py web', showToast)}
           >
             Copy
           </button>
-          <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{CLI_SNIPPET}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+            <span className="cm"># 1. Start the backend server & serve the UI bundle</span>{"\n"}
+            python main.py web{"\n\n"}
+            <span className="cm"># 2. Access the video control interface in your browser</span>{"\n"}
+            Open: http://127.0.0.1:8000
+          </pre>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-/* =============================================
-   Footer
-   ============================================= */
-
-function Footer() {
-  return (
-    <footer className="footer">
-      <div className="container">
-        <div className="footer-links">
-          <a href="https://github.com/AkashDavidKumar/universal-video-downloader-" target="_blank" rel="noreferrer">GitHub</a>
-          <a href="https://github.com/AkashDavidKumar/universal-video-downloader-/blob/main/README.md" target="_blank" rel="noreferrer">README</a>
-          <a href="https://github.com/AkashDavidKumar/universal-video-downloader-/blob/main/deploy_guide.md" target="_blank" rel="noreferrer">Deploy Guide</a>
-          <a href="https://github.com/AkashDavidKumar/universal-video-downloader-/issues" target="_blank" rel="noreferrer">Issues</a>
+      {/* Footer */}
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-links">
+            <a href="https://github.com/AkashDavidKumar/universal-video-downloader-" target="_blank" rel="noreferrer">GitHub Repo</a>
+            <a href="https://github.com/AkashDavidKumar/universal-video-downloader-/blob/main/README.md" target="_blank" rel="noreferrer">README</a>
+            <a href="https://github.com/AkashDavidKumar/universal-video-downloader-/blob/main/deploy_guide.md" target="_blank" rel="noreferrer">Deploy Guide</a>
+          </div>
+          <p>© {new Date().getFullYear()} Universal Video Downloader — Full-Stack Web Interface</p>
         </div>
-        <p>© {new Date().getFullYear()} Universal Video Downloader — MIT License</p>
-        <p style={{ marginTop: '0.3rem', color: 'var(--text-faint)' }}>
-          Built with Python · PySide6 · yt-dlp · React · Vite
-        </p>
-      </div>
-    </footer>
-  );
-}
+      </footer>
 
-/* =============================================
-   App Root
-   ============================================= */
-
-function App() {
-  const [demoFocus, setDemoFocus] = useState(false);
-  const [globalToast, showGlobalToast] = useToast();
-
-  const handleTryDemo = () => {
-    setDemoFocus(true);
-    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  return (
-    <>
-      <Navbar />
-      <Hero onTryDemo={handleTryDemo} />
-      <DownloaderDemo autoFocus={demoFocus} />
-      <Features />
-      <SupportedSites />
-      <InstallGuide showToast={showGlobalToast} />
-      <Footer />
-      {globalToast && (
-        <div className={`toast toast-${globalToast.type}`}>{globalToast.msg}</div>
-      )}
+      {/* Toasts rendering */}
+      {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
     </>
   );
 }
